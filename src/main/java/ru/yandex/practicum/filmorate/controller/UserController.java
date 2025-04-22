@@ -6,8 +6,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
-import ru.yandex.practicum.filmorate.handler.FilmHandler;
-import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.handler.UserHandler;
+import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.HashMap;
 import java.util.List;
@@ -15,30 +15,28 @@ import java.util.Map;
 
 @Slf4j
 @RestController
-@RequestMapping("/films")
+@RequestMapping("/users")
 
-public class FilmController {
-    private final FilmHandler filmHandler = new FilmHandler();
+public class UserController {
+    private final UserHandler userHandler = new UserHandler();
 
     @PostMapping
-    public Film createFilm(@Valid @RequestBody Film film) {
-        log.debug("Начато создание фильма. Получен объект {}", film);
-        return filmHandler.create(film);
+    public User createUser(@Valid @RequestBody User user) {
+        log.debug("Начато создание профиля пользователя. Получен объект {}", user);
+        return userHandler.create(user);
     }
 
     @PutMapping
-    public Film updateFilm(@Valid @RequestBody Film film) {
-        log.debug("Начато обновление фильма. Получен объект {}", film);
-
-        return filmHandler.update(film);
+    public User updateFilm(@Valid @RequestBody User user) {
+        log.debug("Начато обновление профиля пользователя. Получен объект {}", user);
+        return userHandler.update(user);
     }
 
     @GetMapping
-    public List<Film> getAllFilms() {
-        log.debug("Вызван метод getAllFilms() для получения списка фильмов");
-        return filmHandler.getAll();
+    public List<User> getAllUsers() {
+        log.debug("Вызван метод getAllUsers() для получения списка пользователей");
+        return userHandler.getAll();
     }
-
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Object> handleValidationExceptions(MethodArgumentNotValidException ex) {
