@@ -1,13 +1,15 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import jakarta.validation.Valid;
+import jakarta.validation.groups.Default;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.handler.UserHandler;
-import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.*;
 
 import java.util.HashMap;
 import java.util.List;
@@ -16,18 +18,24 @@ import java.util.Map;
 @Slf4j
 @RestController
 @RequestMapping("/users")
-
+@Validated
 public class UserController {
-    private final UserHandler userHandler = new UserHandler();
+    private final UserHandler userHandler;
+
+    // Используем Dependency Injection
+    @Autowired
+    public UserController(UserHandler userHandler) {
+        this.userHandler = userHandler;
+    }
 
     @PostMapping
-    public User createUser(@Valid @RequestBody User user) {
+    public User createUser(@Validated({User.UserCreate.class, Default.class}) @RequestBody User user) {
         log.debug("Начато создание профиля пользователя. Получен объект {}", user);
         return userHandler.create(user);
     }
 
     @PutMapping
-    public User updateFilm(@Valid @RequestBody User user) {
+    public User updateUser(@Validated({User.UserUpdate.class, Default.class}) @RequestBody User user) {
         log.debug("Начато обновление профиля пользователя. Получен объект {}", user);
         return userHandler.update(user);
     }

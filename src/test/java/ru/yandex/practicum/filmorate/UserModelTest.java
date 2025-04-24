@@ -53,7 +53,7 @@ public class UserModelTest {
 
 
     @Test
-    public void testUserWithBlankEmail() {
+    public void testUserWithBlankEmailUpdateMethod() {
 
         User user2 = User.builder()
                 .email("")
@@ -62,7 +62,21 @@ public class UserModelTest {
                 .birthday(LocalDate.of(1990, 1, 1))
                 .build();
 
-        Set<ConstraintViolation<User>> violations = validator.validate(user2);
+        Set<ConstraintViolation<User>> violations = validator.validate(user2, User.UserUpdate.class);
+        assertTrue(violations.isEmpty());
+    }
+
+    @Test
+    public void testUserWithBlankEmailCreateMethod() {
+
+        User user2 = User.builder()
+                .email("")
+                .login("validLogin")
+                .name("Иван Иванов")
+                .birthday(LocalDate.of(1990, 1, 1))
+                .build();
+
+        Set<ConstraintViolation<User>> violations = validator.validate(user2, User.UserCreate.class);
         assertFalse(violations.isEmpty());
     }
 
@@ -123,7 +137,7 @@ public class UserModelTest {
     }
 
     @Test
-    public void testUserWithNullEmail() {
+    public void testUserWithNullEmailCreateMethod() {
 
         User user2 = User.builder()
                 .email(null)
@@ -132,7 +146,7 @@ public class UserModelTest {
                 .birthday(LocalDate.of(1990, 1, 1))
                 .build();
 
-        Set<ConstraintViolation<User>> violations = validator.validate(user2);
+        Set<ConstraintViolation<User>> violations = validator.validate(user2, User.UserCreate.class);
         assertFalse(violations.isEmpty());
     }
 

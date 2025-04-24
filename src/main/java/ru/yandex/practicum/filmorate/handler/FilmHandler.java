@@ -1,9 +1,8 @@
 package ru.yandex.practicum.filmorate.handler;
 
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exeption.DataNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
-import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -12,11 +11,12 @@ import java.util.List;
 import java.util.Map;
 
 @Slf4j
+@Service // Регистрируем класс как Spring Bean
 public class FilmHandler {
     private final Map<Integer, Film> storageFilms = new HashMap<>();
     private int generatedId = 0;
 
-    public Film create(@Valid @RequestBody Film film) {
+    public Film create(Film film) {
         log.debug("Получен объект класса Film {}", film);
         int id = ++generatedId;
         film.setId(id);
@@ -24,7 +24,7 @@ public class FilmHandler {
         return film;
     }
 
-    public Film update(@Valid @RequestBody Film film) {
+    public Film update(Film film) {
         int id = film.getId();
         if (!storageFilms.containsKey(id)) {
             log.debug("Фильм с этим Id не найден в storageFilms, обновление невозможно");

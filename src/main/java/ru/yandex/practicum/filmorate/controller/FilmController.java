@@ -2,6 +2,7 @@ package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -16,9 +17,14 @@ import java.util.Map;
 @Slf4j
 @RestController
 @RequestMapping("/films")
-
 public class FilmController {
-    private final FilmHandler filmHandler = new FilmHandler();
+    private final FilmHandler filmHandler;
+
+    // Используем Dependency Injection
+    @Autowired
+    public FilmController(FilmHandler filmHandler) {
+        this.filmHandler = filmHandler;
+    }
 
     @PostMapping
     public Film createFilm(@Valid @RequestBody Film film) {
@@ -38,7 +44,6 @@ public class FilmController {
         log.debug("Вызван метод getAllFilms() для получения списка фильмов");
         return filmHandler.getAll();
     }
-
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Object> handleValidationExceptions(MethodArgumentNotValidException ex) {

@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.model;
 
 import jakarta.validation.constraints.*;
+import jakarta.validation.groups.Default;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,18 +12,25 @@ import java.time.LocalDate;
 @Builder
 @AllArgsConstructor
 public class User {
-    int id;  // идентификатор
+    private int id;  // идентификатор
 
-    @NotBlank(message = "Email не должен быть пустым")
-    @Email(message = "Некорректный формат email")
-    String email;
+    @NotBlank(message = "Email не должен быть пустым", groups = UserCreate.class)
+    @Email(message = "Некорректный формат email", groups = {UserCreate.class, Default.class, UserUpdate.class})
+    private String email;
 
     @NotBlank(message = "Логин не должен быть пустым")
     @Pattern(regexp = "^\\S+$", message = "Логин не должен содержать пробелы")
-    String login;
+    private String login;
 
-    String name;  // имя для отображения
+    private String name;  // имя для отображения
 
     @PastOrPresent(message = "Дата рождения не может быть в будущем")
-    LocalDate birthday;
+    private LocalDate birthday;
+
+    // Определяем группы валидации
+    public interface UserCreate {
+    }
+
+    public interface UserUpdate {
+    }
 }

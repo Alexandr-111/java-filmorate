@@ -1,9 +1,8 @@
 package ru.yandex.practicum.filmorate.handler;
 
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exeption.DataNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
-import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -12,11 +11,12 @@ import java.util.List;
 import java.util.Map;
 
 @Slf4j
+@Service  // Регистрируем класс как Spring Bean
 public class UserHandler {
     private final Map<Integer, User> storageUsers = new HashMap<>();
     private int generatedId = 0;
 
-    public User create(@Valid @RequestBody User user) {
+    public User create(User user) {
         log.debug("Получен объект класса User {}", user);
         int id = ++generatedId;
         user.setId(id);
@@ -28,7 +28,7 @@ public class UserHandler {
         return user;
     }
 
-    public User update(@Valid @RequestBody User user) {
+    public User update(User user) {
         int id = user.getId();
         if (!storageUsers.containsKey(id)) {
             log.debug("Id не найден в storageUsers, обновление невозможно");
