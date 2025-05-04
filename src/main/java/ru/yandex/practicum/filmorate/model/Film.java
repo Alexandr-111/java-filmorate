@@ -7,12 +7,15 @@ import jakarta.validation.constraints.*;
 
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 @Builder
 @AllArgsConstructor
+@NoArgsConstructor
 public class Film {
-    private int id;  // идентификатор
+    private long id;  // идентификатор
 
     @NotBlank(message = "Название фильма не должно быть пустым")
     private String name;
@@ -25,4 +28,7 @@ public class Film {
 
     @Positive(message = "Продолжительность фильма должна быть положительным числом")
     private long duration;
+
+    @Builder.Default
+    private Set<Long> likesFilm = new HashSet<>();
 }
