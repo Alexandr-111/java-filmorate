@@ -40,13 +40,7 @@ public class FilmService {
     public Film getFilmById(long id) {
         log.debug("Вызван метод FilmService.getFilmById()");
         Optional<Film> filmOptional = filmStorage.getFilmById(id);
-        if (filmOptional.isPresent()) {
-            log.debug("Фильм с id {}  найден", id);
-            return filmOptional.get();
-        } else {
-            log.debug("Фильм с id {}  не найден", id);
-            throw new DataNotFoundException("Фильм с таким id не найден.");
-        }
+        return filmOptional.orElseThrow(() -> new DataNotFoundException("Фильм с таким id не найден."));
     }
 
     public void addLike(long id, long userId) {

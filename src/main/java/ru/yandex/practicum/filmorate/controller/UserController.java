@@ -1,20 +1,22 @@
 package ru.yandex.practicum.filmorate.controller;
 
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.groups.Default;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.*;
-import ru.yandex.practicum.filmorate.dto.Resp;
+import ru.yandex.practicum.filmorate.dto.Response;
 import ru.yandex.practicum.filmorate.service.UserService;
 
 import java.util.List;
 
 @Slf4j
-@RestController
+@Controller
 @RequestMapping("/users")
 @Validated
 public class UserController {
@@ -30,7 +32,7 @@ public class UserController {
                                            @RequestBody User user) {
         log.debug("Вызван UserController.createUser(). Получен объект {}", user);
         User readyUser = userService.create(user);
-        return ResponseEntity.status(HttpStatus.CREATED)   // код ответа 201 CREATED
+        return ResponseEntity.status(HttpStatus.CREATED)
                 .body(readyUser);
     }
 
@@ -39,7 +41,7 @@ public class UserController {
                                            @RequestBody User user) {
         log.debug("Вызван UserController.updateUser(). Начато обновление. Получен объект {}", user);
         User readyUser = userService.update(user);
-        return ResponseEntity.status(HttpStatus.OK)   // код ответа 200 OK
+        return ResponseEntity.status(HttpStatus.OK)
                 .body(readyUser);
     }
 
@@ -52,7 +54,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    ResponseEntity<User> getUser(@PathVariable long id) {
+    public ResponseEntity<User> getUser(@PathVariable @Positive(message = "Id должен быть больше 0") long id) {
         log.debug("Вызван метод UserController.getUser(). Получен id {}", id);
         User user = userService.getUserById(id);
         return ResponseEntity.status(HttpStatus.OK)
@@ -60,31 +62,38 @@ public class UserController {
     }
 
     @PutMapping("/{id}/friends/{friendId}")
-    ResponseEntity<Resp> addFriend(@PathVariable long id, @PathVariable long friendId) {
+    public ResponseEntity<Response> addFriend(@PathVariable @Positive(message = "Id должен быть больше 0") long id,
+                                              @PathVariable @Positive(message = "Id должен быть больше 0") long friendId) {
         log.debug("Вызван метод UserController.addFriend(). Id {}, Id друга {}", id, friendId);
         userService.addToFriends(id, friendId);
         return ResponseEntity.status(HttpStatus.OK)
-                .body(new Resp("Выполнено", "Добавление в друзья прошло успешно"));
+                .body(new Response("Выполнено", "Добавление в друзья прошло успешно"));
     }
 
     @DeleteMapping("/{id}/friends/{friendId}")
-    ResponseEntity<Resp> removeFriend(@PathVariable long id, @PathVariable long friendId) {
+    public ResponseEntity<Response> removeFriend(@PathVariable @Positive(message = "Id должен быть больше 0") long id,
+                                                 @PathVariable
+                                                 @Positive(message = "Id должен быть больше 0") long friendId) {
         log.debug("Вызван метод UserController.removeFriend(). Id {}, Id друга {}", id, friendId);
         userService.removeFromFriends(id, friendId);
         return ResponseEntity.status(HttpStatus.OK)
-                .body(new Resp("Выполнено", "Пользователь c id " + friendId + " удален из друзей"));
+                .body(new Response("Выполнено", "Пользователь c id " + friendId + " удален из друзей"));
     }
 
     @GetMapping("/{id}/friends")
-    ResponseEntity<List<User>> getFriendsUser(@PathVariable long id) {
+    public ResponseEntity<List<User>> getFriendsUser(@PathVariable
+                                                     @Positive(message = "Id должен быть больше 0") long id) {
         log.debug("Вызван метод UserController.getFriendsUser(). Id пользователя {}", id);
         List<User> friends = userService.displayFriends(id);
-        return ResponseEntity.ok(friends);  // код ответа 200 OK
+        return ResponseEntity.ok(friends);
     }
 
     //Возвращает список всех, общих с другим пользователем, друзей
     @GetMapping("/{id}/friends/common/{otherId}")
-    ResponseEntity<List<User>> getCommonFriends(@PathVariable long id, @PathVariable long otherId) {
+    public ResponseEntity<List<User>> getCommonFriends(@PathVariable
+                                                       @Positive(message = "Id должен быть больше 0") long id,
+                                                       @PathVariable
+                                                       @Positive(message = "Id должен быть больше 0") long otherId) {
         log.debug("Вызван UserController.getCommonFriends(). Id пользователя {}. Другого пользователя {}", id, otherId);
         List<User> commonFriends = userService.displayCommonFriends(id, otherId);
         return ResponseEntity.ok(commonFriends);

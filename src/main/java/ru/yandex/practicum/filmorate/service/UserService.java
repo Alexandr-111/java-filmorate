@@ -41,13 +41,7 @@ public class UserService {
     public User getUserById(long id) {
         log.debug("Вызван метод UserService.getUserById()");
         Optional<User> userOptional = userStorage.getUserById(id);
-        if (userOptional.isPresent()) {
-            log.debug("Пользователь с id {}  найден", id);
-            return userOptional.get();
-        } else {
-            log.debug("Пользователь с id {}  не найден", id);
-            throw new DataNotFoundException("Пользователь не найден.");
-        }
+        return userOptional.orElseThrow(() -> new DataNotFoundException("Пользователь не найден."));
     }
 
     public void addToFriends(long id, long friendId) {

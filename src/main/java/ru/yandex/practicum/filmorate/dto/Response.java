@@ -1,10 +1,10 @@
 package ru.yandex.practicum.filmorate.dto;
 
-public class Resp {
-    String name;
-    String description;
+public class Response {
+    private final String name;
+    private final String description;
 
-    public Resp(String name, String description) {
+    public Response(String name, String description) {
         this.name = name;
         this.description = description;
     }
