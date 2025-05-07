@@ -1,11 +1,13 @@
 package ru.yandex.practicum.filmorate.exeption;
 
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import ru.yandex.practicum.filmorate.dto.Response;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -15,30 +17,45 @@ import java.util.Map;
 public class AppExceptionHandler {
 
     @ExceptionHandler(DataNotFoundException.class)
-    public ResponseEntity<Map<String, String>> handleDataNotFoundException(DataNotFoundException ex) {
-        log.debug("Выброшено исключение DataNotFoundException: {}", ex.getMessage());
-        Map<String, String> errors = new HashMap<>();
-        errors.put("error", "Ресурс не найден");
-        errors.put("message", ex.getMessage());
-        return new ResponseEntity<>(errors, HttpStatus.NOT_FOUND);
+    public ResponseEntity<Response> handleDataNotFoundException(DataNotFoundException ex) {
+        log.warn("Выброшено исключение DataNotFoundException: {}", ex.getMessage());
+        Response response = new Response("Не найден ресурс", ex.getMessage());
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
         ex.getBindingResult().getFieldErrors().forEach(error -> {
-            log.debug("Ошибка валидации поля {}: {}", error.getField(), error.getDefaultMessage());
+            log.error("Ошибка валидации поля {}: {}", error.getField(), error.getDefaultMessage());
             errors.put(error.getField(), error.getDefaultMessage());
         });
         return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String, String>> handleAllExceptions(Exception ex) {
-        log.error("Внутренняя ошибка сервера: ", ex); // Логируем сообщение и трассировку стека
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<Map<String, String>> handleConstraintViolationException(ConstraintViolationException ex) {
         Map<String, String> errors = new HashMap<>();
-        errors.put("error", "Внутренняя ошибка сервера");
-        errors.put("message", "Произошла непредвиденная ошибка");
-        return new ResponseEntity<>(errors, HttpStatus.INTERNAL_SERVER_ERROR);
+        ex.getConstraintViolations().forEach(violation -> {
+            String fieldName = violation.getPropertyPath().toString();
+            String message = violation.getMessage();
+            log.error("Ошибка валидации параметра {}: {}", fieldName, message);
+            errors.put(fieldName, message);
+        });
+        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(NumberFormatException.class)
+    public ResponseEntity<Response> handleNumberFormatException(NumberFormatException ex) {
+        log.error("Выброшено исключение NumberFormatException: ", ex);
+        Response response = new Response("Ошибочный формат", "Вы ввели некорректное значение");
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<Response> handleAllExceptions(Exception ex) {
+        log.error("Внутренняя ошибка сервера: ", ex);
+        Response response = new Response("Ошибка сервера", "Операция не выполнена из-за ошибки на сервере");
+        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
