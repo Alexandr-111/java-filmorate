@@ -36,7 +36,6 @@ public class UserModelTest {
         validator = factory.getValidator();
     }
 
-
     @Test
     public void testValidUser() {
 
@@ -51,11 +50,11 @@ public class UserModelTest {
         assertTrue(violations.isEmpty());
     }
 
-
     @Test
     public void testUserWithBlankEmailUpdateMethod() {
 
         User user2 = User.builder()
+                .id(2)
                 .email("")
                 .login("validLogin")
                 .name("Иван Иванов")
@@ -140,6 +139,7 @@ public class UserModelTest {
     public void testUserWithNullEmailCreateMethod() {
 
         User user2 = User.builder()
+                .id(1)
                 .email(null)
                 .login("validLogin")
                 .name("Иван Иванов")

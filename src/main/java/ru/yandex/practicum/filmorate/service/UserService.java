@@ -1,6 +1,8 @@
 package ru.yandex.practicum.filmorate.service;
 
+import jakarta.validation.ValidationException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exeption.DataNotFoundException;
 import ru.yandex.practicum.filmorate.model.User;
@@ -14,8 +16,8 @@ import java.util.*;
 public class UserService {
     private final UserStorage userStorage; //  Зависимость от интерфейса
 
-    @Autowired     // Используем Dependency Injection
-    public UserService(UserStorage userStorage) {
+    @Autowired   // Указываем имя бина
+    public UserService(@Qualifier("userDbStorage") UserStorage userStorage) {
         this.userStorage = userStorage;
     }
 
@@ -46,22 +48,46 @@ public class UserService {
 
     public void addToFriends(long id, long friendId) {
         log.debug("Вызван метод UserService.addFriend(). Id {}, Id друга {}", id, friendId);
+        if (id == friendId) {
+            throw new ValidationException("Нельзя добавить самого себя в друзья");
+        }
+        if (userStorage.userNotExists(id)) {
+            throw new DataNotFoundException("Пользователь с ID " + id + " не найден");
+        }
+        if (userStorage.userNotExists(friendId)) {
+            throw new DataNotFoundException("Пользователь с ID " + friendId + " не найден");
+        }
         userStorage.addToFriends(id, friendId);
     }
 
     public void removeFromFriends(long id, long friendId) {
         log.debug("Вызван метод UserService.removeFromFriends(). Id {}, Id друга {}", id, friendId);
+        if (userStorage.userNotExists(id)) {
+            throw new DataNotFoundException("Пользователь с ID " + id + " не найден");
+        }
+        if (userStorage.userNotExists(friendId)) {
+            throw new DataNotFoundException("Пользователь с ID " + friendId + " не найден");
+        }
         userStorage.removeFromFriends(id, friendId);
     }
 
     public List<User> displayFriends(long id) {    //Возвращает список всех друзей
         log.debug("Вызван метод UserService.displayFriends(). Id {}", id);
+        if (userStorage.userNotExists(id)) {
+            throw new DataNotFoundException("Пользователь с ID " + id + " не найден");
+        }
         return userStorage.displayFriends(id);
     }
 
-    //Возвращает список всех общих друзей
-    public List<User> displayCommonFriends(long id, long otherId) {
-        log.debug("Вызван метод UserService.displayCommonFriends(). Id {}, другой id {}", id, otherId);
-        return userStorage.displayCommonFriends(id, otherId);
+    public List<User> displayCommonFriends(long userId, long otherUserId) {
+        log.debug("Вызван метод UserService.displayCommonFriends(). Id {}, другой id {}", userId, otherUserId);
+        if (userStorage.userNotExists(userId)) {
+            throw new DataNotFoundException("Пользователь с ID " + userId + " не найден");
+        }
+        if (userStorage.userNotExists(otherUserId)) {
+            throw new DataNotFoundException("Пользователь с ID " + otherUserId + " не найден");
+        }
+
+        return userStorage.displayCommonFriends(userId, otherUserId);
     }
 }

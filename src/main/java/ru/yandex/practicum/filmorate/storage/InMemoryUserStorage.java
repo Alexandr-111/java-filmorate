@@ -6,7 +6,7 @@ import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.*;
 
-@Component // Регистрируем класс как Spring Bean
+@Component("inMemoryUserStorage")  // Указываем имя бина
 public class InMemoryUserStorage implements UserStorage {
     private final Map<Long, User> storageUsers = new HashMap<>();
     private long id = 0;

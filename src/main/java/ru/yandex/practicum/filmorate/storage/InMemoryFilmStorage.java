@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.*;
 
-@Component
+@Component("inMemoryFilmStorage")  // Указываем имя бина
 public class InMemoryFilmStorage implements FilmStorage {
     private final Map<Long, Film> storageFilms = new HashMap<>();
     private long id = 0;
@@ -55,12 +55,13 @@ public class InMemoryFilmStorage implements FilmStorage {
         film.getLikesFilm().add(userId);
     }
 
-    public void deleteLike(long id) {
+    @Override
+    public void deleteLike(long id, long userId) {
         if (!storageFilms.containsKey(id)) {
             throw new DataNotFoundException("Фильм с id " + id + " не найден");
         }
         Film film = storageFilms.get(id);
-        film.getLikesFilm().remove(id);
+        film.getLikesFilm().remove(userId);
     }
 
     public List<Film> mostPopularFilms(int count) {
@@ -70,5 +71,9 @@ public class InMemoryFilmStorage implements FilmStorage {
                 .sorted(comparator.reversed())  // Сортируем по убыванию количества лайков
                 .limit(count)
                 .toList();
+    }
+
+    public boolean filmNotExists(long id) {
+        return !(storageFilms.containsKey(id));
     }
 }

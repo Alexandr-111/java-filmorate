@@ -1,7 +1,10 @@
 package ru.yandex.practicum.filmorate.service;
 
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 import ru.yandex.practicum.filmorate.exeption.DataNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import lombok.extern.slf4j.Slf4j;
@@ -11,24 +14,31 @@ import ru.yandex.practicum.filmorate.storage.UserStorage;
 import java.util.*;
 
 @Slf4j
-@Service // Регистрируем класс как Spring Bean
+@Service
+@Validated
 public class FilmService {
     private final FilmStorage filmStorage; //  Зависимость от интерфейса
     private final UserStorage userStorage; //  Зависимость от интерфейса
 
-    @Autowired     // Используем Dependency Injection
-    public FilmService(FilmStorage filmStorage, UserStorage userStorage) {
+    @Autowired   // Указываем имена бинов
+    public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage,
+                       @Qualifier("userDbStorage") UserStorage userStorage) {
         this.filmStorage = filmStorage;
         this.userStorage = userStorage;
     }
 
-    public Film create(Film film) {
+    public Film create(@Valid Film film) {
+        // Проверяем дубликаты перед созданием
         log.debug("Вызван метод FilmService.create(). Получен объект класса Film {}", film);
         return filmStorage.create(film);
     }
 
-    public Film update(Film film) {
+    public Film update(@Valid Film film) {
         log.debug("Вызван FilmService.update(). Получен объект класса Film {}", film);
+        // Проверяем существование фильма
+        if (filmStorage.filmNotExists(film.getId())) {
+            throw new DataNotFoundException("Фильм с id " + film.getId() + " не найден в БД");
+        }
         return filmStorage.update(film);
     }
 
@@ -46,7 +56,7 @@ public class FilmService {
     public void addLike(long id, long userId) {
         log.debug("Вызван метод FilmService.addLike()");
         if (userStorage.userNotExists(userId)) {
-            log.debug("Пользователь с id {}  не найден", userId);
+            log.debug("Пользователь с id {} не найден", userId);
             throw new DataNotFoundException("Пользователь c таким id не найден.");
         }
         filmStorage.addLike(id, userId);
@@ -58,7 +68,7 @@ public class FilmService {
             log.debug("Пользователь с id {}  не найден", userId);
             throw new DataNotFoundException("Пользователь c таким id не найден.");
         }
-        filmStorage.deleteLike(id);
+        filmStorage.deleteLike(id, userId);
     }
 
     public List<Film> mostPopularFilms(int count) {

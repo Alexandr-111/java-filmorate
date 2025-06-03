@@ -1,7 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.groups.Default;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -29,7 +29,8 @@ public class FilmController {
     }
 
     @PostMapping
-    public ResponseEntity<Film> createFilm(@Valid @RequestBody Film film) {
+    public ResponseEntity<Film> createFilm(@Validated({Film.CreateFilmValidation.class, Default.class})
+                                           @RequestBody Film film) {
         log.debug("Вызван FilmController.createFilm(). Начато создание фильма. Получен объект {}", film);
         Film readyFilm = filmService.create(film);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -37,7 +38,8 @@ public class FilmController {
     }
 
     @PutMapping
-    public ResponseEntity<Film> updateFilm(@Valid @RequestBody Film film) {
+    public ResponseEntity<Film> updateFilm(@Validated({Film.UpdateFilmValidation.class, Default.class})
+                                           @RequestBody Film film) {
         log.debug("Вызван FilmController.updateFilm(). Начато обновление. Получен объект {}", film);
         Film readyFilm = filmService.update(film);
         return ResponseEntity.status(HttpStatus.OK)

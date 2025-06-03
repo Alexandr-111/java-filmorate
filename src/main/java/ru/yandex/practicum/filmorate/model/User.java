@@ -17,7 +17,7 @@ import java.util.Set;
 @AllArgsConstructor
 @NoArgsConstructor
 public class User {
-    @PositiveOrZero(message = "Id не может быть отрицательным числом")
+    @Positive(message = "Id должен быть положительным числом", groups = UserUpdate.class)
     private long id;
 
     @NotBlank(message = "Email не должен быть пустым", groups = UserCreate.class)
@@ -30,6 +30,7 @@ public class User {
 
     private String name;
 
+    @NotNull(message = "Необходимо указать дату рождения", groups = UserCreate.class)
     @PastOrPresent(message = "Дата рождения не может быть в будущем")
     private LocalDate birthday;
 

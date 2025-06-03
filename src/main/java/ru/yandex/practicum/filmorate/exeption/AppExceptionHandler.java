@@ -55,7 +55,8 @@ public class AppExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Response> handleAllExceptions(Exception ex) {
         log.error("Внутренняя ошибка сервера: ", ex);
-        Response response = new Response("Ошибка сервера", "Операция не выполнена из-за ошибки на сервере");
+        Response response = new Response("Ошибка сервера",
+                "Операция не выполнена из-за ошибки на сервере");
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
