@@ -15,7 +15,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
-@Repository("userDbStorage") // Указываем имя бина
+import static ru.yandex.practicum.filmorate.storage.Queries.COMMON_FRIENDS;
+
+@Repository
 @RequiredArgsConstructor
 public class UserDbStorage implements UserStorage {
     private final JdbcTemplate jdbcTemplate;
@@ -118,15 +120,7 @@ public class UserDbStorage implements UserStorage {
     // Поиск общих друзей
     @Override
     public List<User> displayCommonFriends(long userId, long otherUserId) {
-        String sql = """
-                    SELECT u.*
-                    FROM users u
-                    JOIN friendships s1 ON s1.person_id = u.user_id
-                    JOIN friendships s2 ON s2.person_id = u.user_id
-                    WHERE s1.user_id = ?
-                      AND s2.user_id = ?
-                """;
-        return jdbcTemplate.query(sql, userRowMapper, userId, otherUserId);
+        return jdbcTemplate.query(COMMON_FRIENDS, userRowMapper, userId, otherUserId);
     }
 
     // Проверка существования пользователя

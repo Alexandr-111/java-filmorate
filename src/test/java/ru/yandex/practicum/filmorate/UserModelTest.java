@@ -10,6 +10,8 @@ import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import jakarta.validation.Validation;
 import jakarta.validation.ConstraintViolation;
+import ru.yandex.practicum.filmorate.model.validation.UserCreateValidation;
+import ru.yandex.practicum.filmorate.model.validation.UserUpdateValidation;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -61,7 +63,7 @@ public class UserModelTest {
                 .birthday(LocalDate.of(1990, 1, 1))
                 .build();
 
-        Set<ConstraintViolation<User>> violations = validator.validate(user2, User.UserUpdate.class);
+        Set<ConstraintViolation<User>> violations = validator.validate(user2, UserUpdateValidation.class);
         assertTrue(violations.isEmpty());
     }
 
@@ -75,7 +77,7 @@ public class UserModelTest {
                 .birthday(LocalDate.of(1990, 1, 1))
                 .build();
 
-        Set<ConstraintViolation<User>> violations = validator.validate(user2, User.UserCreate.class);
+        Set<ConstraintViolation<User>> violations = validator.validate(user2, UserCreateValidation.class);
         assertFalse(violations.isEmpty());
     }
 
@@ -146,7 +148,7 @@ public class UserModelTest {
                 .birthday(LocalDate.of(1990, 1, 1))
                 .build();
 
-        Set<ConstraintViolation<User>> violations = validator.validate(user2, User.UserCreate.class);
+        Set<ConstraintViolation<User>> violations = validator.validate(user2, UserCreateValidation.class);
         assertFalse(violations.isEmpty());
     }
 

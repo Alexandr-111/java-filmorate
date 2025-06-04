@@ -1,12 +1,12 @@
 package ru.yandex.practicum.filmorate.model;
 
+import jakarta.validation.groups.Default;
 import ru.yandex.practicum.filmorate.customvalidator.ReleaseDateAfter;
+import ru.yandex.practicum.filmorate.model.validation.CreateFilmValidation;
+import ru.yandex.practicum.filmorate.model.validation.UpdateFilmValidation;
 import lombok.AllArgsConstructor;
 import lombok.*;
 import jakarta.validation.constraints.*;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.validation.groups.Default;
-
 
 import java.time.LocalDate;
 import java.util.*;
@@ -23,7 +23,7 @@ public class Film {
     private String name;
 
     @NotBlank(message = "Описание фильма не должно быть пустым", groups = CreateFilmValidation.class)
-    @Size(max = 200, message = "Описание не должно превышать 200 символов")
+    @Size(max = 200, message = "Описание не должно превышать 200 символов", groups = Default.class)
     private String description;
 
     @ReleaseDateAfter(fieldName = "releaseDate")  // релиз должен быть не ранее установленной даты
@@ -36,15 +36,5 @@ public class Film {
 
     private List<Genre> genres = new ArrayList<>();
 
-    private long likes;  // счетчик лайков
-
-    @JsonIgnore
-    @Builder.Default
-    private Set<Long> likesFilm = new HashSet<>();
-
-    public interface CreateFilmValidation extends Default {
-    }
-
-    public interface UpdateFilmValidation extends Default {
-    }
+    private long likes;
 }

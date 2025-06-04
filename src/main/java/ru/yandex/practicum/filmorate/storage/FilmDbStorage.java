@@ -7,6 +7,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.yandex.practicum.filmorate.exeption.DataNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -18,137 +19,17 @@ import java.sql.Date;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@Repository("filmDbStorage")
+import static ru.yandex.practicum.filmorate.storage.Queries.*;
+
+@Repository
 @RequiredArgsConstructor
 public class FilmDbStorage implements FilmStorage {
-
     private final JdbcTemplate jdbcTemplate;
-    private final UserDbStorage userDbStorage;
-    private final MpaDbStorage mpaDbStorage;
-    private final GenreDbStorage genreDbStorage;
     private final FilmRowMapper filmRowMapper = new FilmRowMapper();
-
-    public static final String FILM_WITH_GENRES = """
-            SELECT
-                f.film_id,
-                f.name AS film_name,
-                f.description,
-                f.release_date,
-                f.duration,
-                f.rating_id,
-                ar.rating AS mpa_name,
-                GROUP_CONCAT(CONCAT(CONCAT(g.genre_id, ':'), g.name)) AS genres
-            FROM films f
-            JOIN age_ratings ar ON f.rating_id = ar.rating_id
-            LEFT JOIN film_genres fg ON f.film_id = fg.film_id
-            LEFT JOIN genres g ON fg.genre_id = g.genre_id
-            WHERE f.film_id = ?
-            GROUP BY
-                f.film_id,
-                f.name,
-                f.description,
-                f.release_date,
-                f.duration,
-                f.rating_id,
-                ar.rating
-            """;
-
-    public static final String FILM_WITH_MPA = """
-                SELECT
-                    f.film_id,
-                    f.name,
-                    f.description,
-                    f.release_date,
-                    f.duration,
-                    f.rating_id,
-                    m.rating AS mpa_name,
-                    (SELECT COUNT(*) FROM film_likes fl WHERE fl.film_id = f.film_id) AS likes
-                FROM films f
-                JOIN age_ratings m ON f.rating_id = m.rating_id
-                WHERE f.film_id = ?
-            """;
-    public static final String ALL_FILMS = """
-            SELECT
-                f.film_id,
-                f.name AS film_name,
-                f.description,
-                f.release_date,
-                f.duration,
-                f.rating_id,
-                m.rating AS mpa_name,
-                COALESCE(fl.likes_count, 0) AS likes,
-                GROUP_CONCAT(CONCAT(g.genre_id, ':', g.name)) AS genres
-            FROM films f
-            JOIN age_ratings m ON f.rating_id = m.rating_id
-            LEFT JOIN film_genres fg ON f.film_id = fg.film_id
-            LEFT JOIN genres g ON fg.genre_id = g.genre_id
-            LEFT JOIN (
-                SELECT film_id, COUNT(*) AS likes_count
-                FROM film_likes
-                GROUP BY film_id
-            ) fl ON f.film_id = fl.film_id
-            GROUP BY
-                f.film_id,
-                f.name,
-                f.description,
-                f.release_date,
-                f.duration,
-                f.rating_id,
-                m.rating,
-                fl.likes_count
-            """;
-    public static final String FILM_BY_ID = """
-            SELECT
-                f.film_id,
-                f.name AS film_name,
-                f.description,
-                f.release_date,
-                f.duration,
-                f.rating_id,
-                ar.rating AS mpa_name,
-                g.genre_id AS genre_id,
-                g.name AS genre_name
-            FROM films f
-            JOIN age_ratings ar ON f.rating_id = ar.rating_id
-            LEFT JOIN film_genres fg ON f.film_id = fg.film_id
-            LEFT JOIN genres g ON fg.genre_id = g.genre_id
-            WHERE f.film_id = ?
-            ORDER BY g.genre_id
-            """;
-    public static final String POPULAR_FILMS = """
-            SELECT
-                f.film_id,
-                f.name AS film_name,
-                f.description,
-                f.release_date,
-                f.duration,
-                f.rating_id,
-                ar.rating AS mpa_name,
-                (SELECT COUNT(*) FROM film_likes fl WHERE fl.film_id = f.film_id) AS likes,
-                GROUP_CONCAT(g.genre_id || ':' || g.name) AS genres
-            FROM films f
-            JOIN age_ratings ar ON f.rating_id = ar.rating_id
-            LEFT JOIN film_genres fg ON f.film_id = fg.film_id
-            LEFT JOIN genres g ON fg.genre_id = g.genre_id
-            GROUP BY
-                f.film_id,
-                f.name,
-                f.description,
-                f.release_date,
-                f.duration,
-                f.rating_id,
-                ar.rating
-            ORDER BY likes DESC
-            LIMIT ?
-            """;
 
     @Override
     public Film create(Film film) {
-
-        // Валидация MPA
-        validateMpa(film.getMpa().getId());
-        // Валидация жанров
-        validateGenres(film.getGenres());
+        validateFilm(film);
         // Сохраняем основной фильм
         String sql = "INSERT INTO films (name, description, release_date, duration, rating_id) VALUES (?, ?, ?, ?, ?)";
         KeyHolder keyHolder = new GeneratedKeyHolder();
@@ -233,22 +114,25 @@ public class FilmDbStorage implements FilmStorage {
         return Boolean.TRUE.equals(jdbcTemplate.queryForObject(sql, Boolean.class, filmId));
     }
 
-    @Transactional
-    @Override
-    public Film update(Film film) {
-
+    private void validateFilm(Film film) {
         if (film == null) {
             throw new IllegalArgumentException("Фильм не должен быть null");
         }
+        // Валидация MPA
+        validateMpa(film.getMpa().getId());
+
+        // Валидация жанров
+        validateGenres(film.getGenres());
+    }
+
+    @Transactional
+    @Override
+    public Film update(Film film) {
+        validateFilm(film);
         long filmId = film.getId();
         if (filmNotExists(filmId)) {
             throw new DataNotFoundException("Фильм с ID " + filmId + " не найден. Обновление невозможно.");
         }
-        // Валидация MPA
-        validateMpa(film.getMpa().getId());
-        // Валидация жанров
-        validateGenres(film.getGenres());
-
         // Блокировка фильма
         jdbcTemplate.queryForObject(
                 "SELECT film_id FROM films WHERE film_id = ? FOR UPDATE",
@@ -258,7 +142,7 @@ public class FilmDbStorage implements FilmStorage {
         // Обновляем основные данные
         updateFilmCoreData(film);
         // Обновляем связанные жанры
-        genreDbStorage.updateFilmGenres(film);
+        updateGenres(film);
         // Получаем полные данные из БД
         Film updatedFilm = getFilmWithDetails(filmId);
         // Добавляем лайки
@@ -266,18 +150,32 @@ public class FilmDbStorage implements FilmStorage {
         return updatedFilm;
     }
 
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void updateGenres(Film film) {
+        long filmId = film.getId();
+
+        // Удаление текущих связей
+        int deleted = jdbcTemplate.update("DELETE FROM film_genres WHERE film_id = ?", filmId);
+
+        if (film.getGenres() != null && !film.getGenres().isEmpty()) {
+            Set<Long> uniqueIds = film.getGenres().stream()
+                    .map(Genre::getId)
+                    .collect(Collectors.toSet());
+            //  Пакетная вставка
+            List<Object[]> batchArgs = uniqueIds.stream()
+                    .map(genreId -> new Object[]{filmId, genreId})
+                    .collect(Collectors.toList());
+
+            jdbcTemplate.batchUpdate(
+                    "INSERT INTO film_genres (film_id, genre_id) VALUES (?, ?)",
+                    batchArgs
+            );
+        }
+    }
+
     private void updateFilmCoreData(Film film) {
         long filmId = film.getId();
-        String sqlQuery = """
-                    UPDATE films SET
-                        name = ?,
-                        description = ?,
-                        release_date = ?,
-                        duration = ?,
-                        rating_id = ?
-                    WHERE film_id = ?
-                """;
-        int rowsAffected = jdbcTemplate.update(sqlQuery,
+        int rowsAffected = jdbcTemplate.update(UPDATE_CORE,
                 film.getName(),
                 film.getDescription(),
                 (film.getReleaseDate() != null) ? Date.valueOf(film.getReleaseDate()) : null,
@@ -292,7 +190,13 @@ public class FilmDbStorage implements FilmStorage {
 
     private Film getFilmWithDetails(long filmId) {
         Film film = getFilmBasicInfo(filmId);
-        List<Genre> genres = genreDbStorage.getGenresByFilmId(filmId);
+        List<Genre> genres = jdbcTemplate.query(GET_GENRES, (rs, rowNum) -> {
+                    Genre genre = new Genre();
+                    genre.setId(rs.getLong("genre_id"));
+                    genre.setName(rs.getString("name"));
+                    return genre;
+                }, filmId
+        );
         film.setGenres(genres);
         return film;
     }
@@ -365,6 +269,7 @@ public class FilmDbStorage implements FilmStorage {
         jdbcTemplate.update(sqlQuery, id, userId);
     }
 
+    @Transactional
     @Override
     public void deleteLike(long filmId, long userId) {
         // Проверяем существование фильма
@@ -372,7 +277,9 @@ public class FilmDbStorage implements FilmStorage {
             throw new DataNotFoundException("Фильм с id " + filmId + " не найден");
         }
         // Проверяем существование пользователя
-        if (userDbStorage.userNotExists(userId)) {
+        String sql = "SELECT COUNT(*) FROM users WHERE user_id = ?";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, userId);
+        if (count == null || count == 0) {
             throw new DataNotFoundException("Пользователь с id " + userId + " не найден");
         }
         // Удаляем лайк (запись из таблицы film_likes)
@@ -386,7 +293,9 @@ public class FilmDbStorage implements FilmStorage {
     }
 
     private void validateMpa(int mpaId) {
-        if (mpaDbStorage.mpaNotExists(mpaId)) {
+        String sql = "SELECT COUNT(*) FROM age_ratings WHERE rating_id = ?";
+        Integer count = jdbcTemplate.queryForObject(sql, Integer.class, mpaId);
+        if (count == null || count == 0) {
             throw new DataNotFoundException("MPA-рейтинг с id " + mpaId + " не найден в БД");
         }
     }
@@ -398,10 +307,28 @@ public class FilmDbStorage implements FilmStorage {
         Set<Long> genreIds = genres.stream()
                 .map(Genre::getId)
                 .collect(Collectors.toSet());
-        Set<Long> missingIds = genreDbStorage.findMissingIds(genreIds);
+        Set<Long> missingIds = findMissingIds(genreIds);
         if (!missingIds.isEmpty()) {
             throw new DataNotFoundException("Следующие ID жанров не найдены: " + missingIds);
         }
+    }
+
+    public Set<Long> findMissingIds(Set<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Collections.emptySet();
+        }
+        String placeholders = ids.stream()
+                .map(id -> "?")
+                .collect(Collectors.joining(","));
+
+        String sql = "SELECT genre_id FROM genres WHERE genre_id IN (" + placeholders + ")";
+        // Получаем существующие ID
+        Set<Long> existingIds = new HashSet<>(jdbcTemplate.queryForList(sql, Long.class, ids.toArray()));
+
+        // Возвращаем разницу между запрошенными и существующими ID
+        Set<Long> missingIds = new HashSet<>(ids);
+        missingIds.removeAll(existingIds);
+        return missingIds;
     }
 
     private static class FilmRowMapper implements RowMapper<Film> {

@@ -1,8 +1,7 @@
 package ru.yandex.practicum.filmorate.service;
 
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 import ru.yandex.practicum.filmorate.exeption.DataNotFoundException;
@@ -16,16 +15,10 @@ import java.util.*;
 @Slf4j
 @Service
 @Validated
+@RequiredArgsConstructor
 public class FilmService {
-    private final FilmStorage filmStorage; //  Зависимость от интерфейса
-    private final UserStorage userStorage; //  Зависимость от интерфейса
-
-    @Autowired   // Указываем имена бинов
-    public FilmService(@Qualifier("filmDbStorage") FilmStorage filmStorage,
-                       @Qualifier("userDbStorage") UserStorage userStorage) {
-        this.filmStorage = filmStorage;
-        this.userStorage = userStorage;
-    }
+    private final FilmStorage filmStorage;
+    private final UserStorage userStorage;
 
     public Film create(@Valid Film film) {
         // Проверяем дубликаты перед созданием
