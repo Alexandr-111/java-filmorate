@@ -2,8 +2,8 @@ package ru.yandex.practicum.filmorate.controller;
 
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.groups.Default;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.model.*;
 import ru.yandex.practicum.filmorate.dto.Response;
 import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.model.validation.UserCreateValidation;
+import ru.yandex.practicum.filmorate.model.validation.UserUpdateValidation;
 
 import java.util.List;
 
@@ -19,16 +21,12 @@ import java.util.List;
 @Controller
 @RequestMapping("/users")
 @Validated
+@RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
 
-    @Autowired
-    public UserController(UserService userService) { // Используем Dependency Injection
-        this.userService = userService;
-    }
-
     @PostMapping
-    public ResponseEntity<User> createUser(@Validated({User.UserCreate.class, Default.class})
+    public ResponseEntity<User> createUser(@Validated({UserCreateValidation.class, Default.class})
                                            @RequestBody User user) {
         log.debug("Вызван UserController.createUser(). Получен объект {}", user);
         User readyUser = userService.create(user);
@@ -37,7 +35,7 @@ public class UserController {
     }
 
     @PutMapping
-    public ResponseEntity<User> updateUser(@Validated({User.UserUpdate.class, Default.class})
+    public ResponseEntity<User> updateUser(@Validated({UserUpdateValidation.class, Default.class})
                                            @RequestBody User user) {
         log.debug("Вызван UserController.updateUser(). Начато обновление. Получен объект {}", user);
         User readyUser = userService.update(user);

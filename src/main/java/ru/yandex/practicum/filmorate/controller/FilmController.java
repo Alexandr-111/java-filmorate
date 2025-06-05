@@ -1,9 +1,9 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.groups.Default;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -12,6 +12,8 @@ import ru.yandex.practicum.filmorate.dto.Response;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import org.springframework.web.bind.annotation.*;
+import ru.yandex.practicum.filmorate.model.validation.CreateFilmValidation;
+import ru.yandex.practicum.filmorate.model.validation.UpdateFilmValidation;
 
 import java.util.List;
 
@@ -19,17 +21,13 @@ import java.util.List;
 @Controller
 @RequestMapping("/films")
 @Validated
+@RequiredArgsConstructor
 public class FilmController {
     private final FilmService filmService;
 
-    // Используем Dependency Injection
-    @Autowired
-    public FilmController(FilmService filmService) {
-        this.filmService = filmService;
-    }
-
     @PostMapping
-    public ResponseEntity<Film> createFilm(@Valid @RequestBody Film film) {
+    public ResponseEntity<Film> createFilm(@Validated({CreateFilmValidation.class, Default.class})
+                                           @RequestBody Film film) {
         log.debug("Вызван FilmController.createFilm(). Начато создание фильма. Получен объект {}", film);
         Film readyFilm = filmService.create(film);
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -37,7 +35,8 @@ public class FilmController {
     }
 
     @PutMapping
-    public ResponseEntity<Film> updateFilm(@Valid @RequestBody Film film) {
+    public ResponseEntity<Film> updateFilm(@Validated({UpdateFilmValidation.class, Default.class})
+                                           @RequestBody Film film) {
         log.debug("Вызван FilmController.updateFilm(). Начато обновление. Получен объект {}", film);
         Film readyFilm = filmService.update(film);
         return ResponseEntity.status(HttpStatus.OK)

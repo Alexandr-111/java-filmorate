@@ -1,7 +1,6 @@
 package ru.yandex.practicum.filmorate;
 
 import org.junit.jupiter.api.*;
-
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.time.LocalDate;
@@ -11,6 +10,7 @@ import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import jakarta.validation.Validation;
 import jakarta.validation.ConstraintViolation;
+import ru.yandex.practicum.filmorate.model.validation.CreateFilmValidation;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -60,7 +60,7 @@ public class FilmModelTest {
                 .duration(120)
                 .build();
 
-        Set<ConstraintViolation<Film>> violations = validator.validate(invalidFilm);
+        Set<ConstraintViolation<Film>> violations = validator.validate(invalidFilm, CreateFilmValidation.class);
         assertFalse(violations.isEmpty()); // Если объект Film является невалидным, то Set не будет пустым
     }
 
@@ -133,7 +133,7 @@ public class FilmModelTest {
                 .duration(120)
                 .build();
 
-        Set<ConstraintViolation<Film>> violations = validator.validate(invalidFilm);
+        Set<ConstraintViolation<Film>> violations = validator.validate(invalidFilm, CreateFilmValidation.class);
         assertFalse(violations.isEmpty());
     }
 }

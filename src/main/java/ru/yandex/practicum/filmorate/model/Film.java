@@ -1,28 +1,29 @@
 package ru.yandex.practicum.filmorate.model;
 
+import jakarta.validation.groups.Default;
 import ru.yandex.practicum.filmorate.customvalidator.ReleaseDateAfter;
+import ru.yandex.practicum.filmorate.model.validation.CreateFilmValidation;
+import ru.yandex.practicum.filmorate.model.validation.UpdateFilmValidation;
 import lombok.AllArgsConstructor;
 import lombok.*;
 import jakarta.validation.constraints.*;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class Film {
-    @PositiveOrZero(message = "Id не может быть отрицательным числом")
+    @Positive(message = "Id должен быть положительным числом", groups = UpdateFilmValidation.class)
     private long id;
 
-    @NotBlank(message = "Название фильма не должно быть пустым")
+    @NotBlank(message = "Название фильма не должно быть пустым", groups = CreateFilmValidation.class)
     private String name;
 
-    @Size(max = 200, message = "Описание не должно превышать 200 символов")
+    @NotBlank(message = "Описание фильма не должно быть пустым", groups = CreateFilmValidation.class)
+    @Size(max = 200, message = "Описание не должно превышать 200 символов", groups = Default.class)
     private String description;
 
     @ReleaseDateAfter(fieldName = "releaseDate")  // релиз должен быть не ранее установленной даты
@@ -31,7 +32,9 @@ public class Film {
     @Positive(message = "Продолжительность фильма должна быть положительным числом")
     private long duration;
 
-    @JsonIgnore
-    @Builder.Default
-    private Set<Long> likesFilm = new HashSet<>();
+    private Mpa mpa;
+
+    private List<Genre> genres = new ArrayList<>();
+
+    private long likes;
 }

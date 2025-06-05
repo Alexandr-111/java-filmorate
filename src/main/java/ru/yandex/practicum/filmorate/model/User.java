@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
+import ru.yandex.practicum.filmorate.model.validation.UserCreateValidation;
+import ru.yandex.practicum.filmorate.model.validation.UserUpdateValidation;
 import jakarta.validation.constraints.*;
 import jakarta.validation.groups.Default;
 import lombok.AllArgsConstructor;
@@ -9,19 +10,18 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
 public class User {
-    @PositiveOrZero(message = "Id не может быть отрицательным числом")
+    @Positive(message = "Id должен быть положительным числом", groups = UserUpdateValidation.class)
     private long id;
 
-    @NotBlank(message = "Email не должен быть пустым", groups = UserCreate.class)
-    @Email(message = "Некорректный формат email", groups = {UserCreate.class, Default.class, UserUpdate.class})
+    @NotBlank(message = "Email не должен быть пустым", groups = UserCreateValidation.class)
+    @Email(message = "Некорректный формат email", groups = {UserCreateValidation.class,
+            Default.class, UserUpdateValidation.class})
     private String email;
 
     @NotBlank(message = "Логин не должен быть пустым")
@@ -30,17 +30,7 @@ public class User {
 
     private String name;
 
-    @PastOrPresent(message = "Дата рождения не может быть в будущем")
+    @NotNull(message = "Необходимо указать дату рождения", groups = UserCreateValidation.class)
+    @PastOrPresent(message = "Дата рождения не может быть в будущем", groups = Default.class)
     private LocalDate birthday;
-
-    @JsonIgnore
-    @Builder.Default
-    private Set<Long> allFriends = new HashSet<>();
-
-    // Определяем группы валидации
-    public interface UserCreate {
-    }
-
-    public interface UserUpdate {
-    }
 }

@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface FilmStorage {
+    boolean filmNotExists(long id);
+
     Film create(Film film);
 
     Film update(Film film);
@@ -16,7 +18,7 @@ public interface FilmStorage {
 
     void addLike(long id, long userId);
 
-    void deleteLike(long id);
+    void deleteLike(long id, long userId);
 
     List<Film> mostPopularFilms(int count);
 }

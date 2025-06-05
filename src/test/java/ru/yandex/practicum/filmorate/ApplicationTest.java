@@ -4,8 +4,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class FilmorateApplicationTests {
+class ApplicationTest {
 
+    // Тест проверяет, что контекст загружается
     @Test
     void contextLoads() {
     }
